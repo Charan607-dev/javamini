@@ -1,0 +1,16 @@
+[ {
+  "id" : "bdc964a8-306c-43b2-ba12-8b6e98af10a7",
+  "skillId" : "d93abf74-a1cc-4bb6-848b-3f51c441559a",
+  "title" : "Java & Spring Boot 3",
+  "category" : "Technology",
+  "teacher" : "Alice Johnson",
+  "teacherEmail" : "alice@college.edu",
+  "student" : "Bob Smith",
+  "studentEmail" : "bob@college.edu",
+  "exchangeSkill" : "Figma & UI Design",
+  "exchangeSkillId" : "c5e50215-33fd-495b-ad96-182b3464f7c0",
+  "date" : "2026-10-25",
+  "time" : "14:00",
+  "status" : "Confirmed",
+  "createdAt" : "2026-10-18T11:52:37.152898800Z"
+} ]

@@ -1,0 +1,22 @@
+[ {
+  "id" : "38127654-4aa2-4838-a6b5-e458f154ce0a",
+  "name" : "Bob Smith",
+  "email" : "bob@college.edu",
+  "college" : "Harvard",
+  "password" : "$2a$10$WafND/TlrfvJR2XOEmSF8O/8u3q/LPzdWMZDWAjIQupzgRsQaEKPS",
+  "createdAt" : "2026-10-18T11:52:37.051782900Z"
+}, {
+  "id" : "f607e41a-5f2a-405c-988a-4d52112db232",
+  "name" : "Test User",
+  "email" : "test-1792324261738@example.com",
+  "college" : "Test University",
+  "password" : "$2a$10$AyIllJbd7kGq.XbbUkB5ZuuML62DPntuuh63GUS.Wh3QLDl2k0uHe",
+  "createdAt" : "2026-10-18T11:51:02.386417700Z"
+}, {
+  "id" : "014fdc2c-3bc1-4324-bee1-9f61177d9187",
+  "name" : "Alice Johnson",
+  "email" : "alice@college.edu",
+  "college" : "MIT",
+  "password" : "$2a$10$/ukiCd9zCCr2xwKjG7KS/.DpNd6UNq2TOn4JrCI7WLWTlFRLpbwBC",
+  "createdAt" : "2026-10-18T11:52:36.385444200Z"
+} ]

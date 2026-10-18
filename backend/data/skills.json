@@ -1,0 +1,21 @@
+[ {
+  "id" : "c5e50215-33fd-495b-ad96-182b3464f7c0",
+  "ownerEmail" : "bob@college.edu",
+  "ownerName" : "Bob Smith",
+  "title" : "Figma & UI Design",
+  "category" : "Design",
+  "description" : "Wireframing and user interface design",
+  "level" : "Intermediate",
+  "wants" : "Java Backend",
+  "createdAt" : "2026-10-18T11:52:37.098601800Z"
+}, {
+  "id" : "d93abf74-a1cc-4bb6-848b-3f51c441559a",
+  "ownerEmail" : "alice@college.edu",
+  "ownerName" : "Alice Johnson",
+  "title" : "Java & Spring Boot 3",
+  "category" : "Technology",
+  "description" : "Full stack backend development and microservices",
+  "level" : "Advanced",
+  "wants" : "UI/UX Design",
+  "createdAt" : "2026-10-18T11:52:37.080759600Z"
+} ]
