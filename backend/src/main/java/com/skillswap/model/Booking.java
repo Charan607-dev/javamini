@@ -21,8 +21,12 @@ public class Booking {
 
     private String date;
     private String time;
-    private String status;       // Requested, Accepted, Rejected, Completed
+    private String status;       // Requested, Accepted, Rejected, Completed, Postponed
+    private String proposedDate;
+    private String proposedTime;
+    private String rescheduleProposedBy;
     private Instant createdAt;
+    private Instant updatedAt;
 
     public Booking() {
     }
@@ -68,6 +72,18 @@ public class Booking {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
 
+    public String getProposedDate() { return proposedDate; }
+    public void setProposedDate(String proposedDate) { this.proposedDate = proposedDate; }
+
+    public String getProposedTime() { return proposedTime; }
+    public void setProposedTime(String proposedTime) { this.proposedTime = proposedTime; }
+
+    public String getRescheduleProposedBy() { return rescheduleProposedBy; }
+    public void setRescheduleProposedBy(String rescheduleProposedBy) { this.rescheduleProposedBy = rescheduleProposedBy; }
+
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
+
+    public Instant getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

@@ -39,6 +39,13 @@ public class ScheduleController {
         return ResponseEntity.status(HttpStatus.CREATED).body(schedule);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Schedule> updateSchedule(
+            @PathVariable String id,
+            @Valid @RequestBody ScheduleRequest request) throws IOException {
+        return ResponseEntity.ok(scheduleService.updateSchedule(id, request));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSchedule(@PathVariable String id) throws IOException {
         scheduleService.deleteSchedule(id);

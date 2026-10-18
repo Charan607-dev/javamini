@@ -1,17 +1,59 @@
 [ {
+  "id" : "e94b64b7-acee-4410-bba8-4552c65cb034",
+  "name" : "Priya",
+  "email" : "sakhipriya2508@gmail.com",
+  "college" : "Student Institution",
+  "password" : "$2a$10$MtferX2cjOqFerSsj9mXhOtzj/A9C7gmsedx76tA1kOnMyDI25nbm",
+  "createdAt" : "2026-10-18T12:53:24.263121400Z"
+}, {
+  "id" : "d5c60861-e53a-4534-badd-3d33b9512d57",
+  "name" : "Test User",
+  "email" : "test-1792330137674@example.com",
+  "college" : "Test University",
+  "password" : "$2a$10$vPOXZu7iiyZgKp61nBJ32uuXymqzA6x.W5FbNfK6XL8L6Cdkfp72y",
+  "createdAt" : "2026-10-18T13:28:57.958018Z"
+}, {
+  "id" : "b9a4b18d-a41f-46ec-bfc4-446ccdccb9b2",
+  "name" : "Charan Raj",
+  "email" : "scharanraj99@gamil.com",
+  "college" : "Student Institution",
+  "password" : "$2a$10$FJ17PZyh.TNDBdKt1SkAa.MxVULTHk7mrJ66Gsejy7Ev5/7473XVK",
+  "createdAt" : "2026-10-18T12:55:20.813275200Z"
+}, {
+  "id" : "8b32c95d-4a02-4d23-a9bc-8d532f012b34",
+  "name" : "Diana Martinez",
+  "email" : "diana@college.edu",
+  "college" : "UC Berkeley",
+  "password" : "$2a$10$/ukiCd9zCCr2xwKjG7KS/.DpNd6UNq2TOn4JrCI7WLWTlFRLpbwBC",
+  "createdAt" : "2026-10-18T12:05:00Z"
+}, {
+  "id" : "0a60ecfd-2114-4008-998f-5835fbd40cc5",
+  "name" : "Charan Raj",
+  "email" : "scharanraj99@gmail.com",
+  "college" : "Student Institution",
+  "password" : "$2a$10$nGLmuUmMhRvCPqHexmV2b.Pnpr82vkPqDhlotZG.KgG.cAYjcPTne",
+  "createdAt" : "2026-10-18T12:52:31.896831400Z"
+}, {
   "id" : "38127654-4aa2-4838-a6b5-e458f154ce0a",
   "name" : "Bob Smith",
   "email" : "bob@college.edu",
   "college" : "Harvard",
-  "password" : "$2a$10$WafND/TlrfvJR2XOEmSF8O/8u3q/LPzdWMZDWAjIQupzgRsQaEKPS",
+  "password" : "$2a$10$/ukiCd9zCCr2xwKjG7KS/.DpNd6UNq2TOn4JrCI7WLWTlFRLpbwBC",
   "createdAt" : "2026-10-18T11:52:37.051782900Z"
 }, {
-  "id" : "f607e41a-5f2a-405c-988a-4d52112db232",
-  "name" : "Test User",
-  "email" : "test-1792324261738@example.com",
+  "id" : "52f4c3d9-002e-4772-beeb-87933c71c569",
+  "name" : "SkillSwap Test",
+  "email" : "skillswap.test.2026@example.com",
   "college" : "Test University",
-  "password" : "$2a$10$AyIllJbd7kGq.XbbUkB5ZuuML62DPntuuh63GUS.Wh3QLDl2k0uHe",
-  "createdAt" : "2026-10-18T11:51:02.386417700Z"
+  "password" : "$2a$10$NNcceK5.q.3FsAt9DdeyJOJM5rMyQq4hU2YLsZL6r0dE8dr.uF8vO",
+  "createdAt" : "2026-10-18T12:38:43.725981200Z"
+}, {
+  "id" : "5a21b84c-3f91-4c12-98ab-7c421e901a23",
+  "name" : "Charlie Davis",
+  "email" : "charlie@college.edu",
+  "college" : "Stanford",
+  "password" : "$2a$10$/ukiCd9zCCr2xwKjG7KS/.DpNd6UNq2TOn4JrCI7WLWTlFRLpbwBC",
+  "createdAt" : "2026-10-18T12:00:00Z"
 }, {
   "id" : "014fdc2c-3bc1-4324-bee1-9f61177d9187",
   "name" : "Alice Johnson",
@@ -19,4 +61,25 @@
   "college" : "MIT",
   "password" : "$2a$10$/ukiCd9zCCr2xwKjG7KS/.DpNd6UNq2TOn4JrCI7WLWTlFRLpbwBC",
   "createdAt" : "2026-10-18T11:52:36.385444200Z"
+}, {
+  "id" : "fd747b43-f649-4c32-ade3-7382f09eec34",
+  "name" : "Test User",
+  "email" : "test-1792331369689@example.com",
+  "college" : "Test University",
+  "password" : "$2a$10$vZ1VUGu4Csu6I/RAE7oxnO4YiPXlyDjGtKmqADhsjbq5i1SdZytqO",
+  "createdAt" : "2026-10-18T13:49:29.971486900Z"
+}, {
+  "id" : "12aab2a4-eb22-4638-a30e-4056a0a822d4",
+  "name" : "Test User",
+  "email" : "test-1792329956202@example.com",
+  "college" : "Test University",
+  "password" : "$2a$10$EWl3cpEwe6t.yv3mHWgRPOArnAyeksZBUYvA8d3zFu1esLRq8cH.K",
+  "createdAt" : "2026-10-18T13:25:56.440385100Z"
+}, {
+  "id" : "129d961a-7197-4840-8cf5-ced1c33b4eaa",
+  "name" : "Test User",
+  "email" : "test-1792326765445@example.com",
+  "college" : "Test University",
+  "password" : "$2a$10$NLZsSIDy6mr4/jpbq0TYxOL8eAntTzU.kfaqKXFG8CpXyEn9VNDpO",
+  "createdAt" : "2026-10-18T12:32:46.035640800Z"
 } ]

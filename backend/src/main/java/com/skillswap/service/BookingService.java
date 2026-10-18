@@ -96,7 +96,120 @@ public class BookingService {
     public Booking updateBookingStatus(String id, String status) throws IOException {
         Booking booking = getBookingById(id);
         booking.setStatus(status);
+        booking.setUpdatedAt(Instant.now());
         return bookingRepository.save(booking);
+    }
+
+    public Booking updateBooking(String id, Booking updates) throws IOException {
+        Booking existing = getBookingById(id);
+        if (updates.getDate() != null && !updates.getDate().isBlank()) existing.setDate(updates.getDate());
+        if (updates.getTime() != null && !updates.getTime().isBlank()) existing.setTime(updates.getTime());
+        if (updates.getStatus() != null && !updates.getStatus().isBlank()) existing.setStatus(updates.getStatus());
+        if (updates.getProposedDate() != null) existing.setProposedDate(updates.getProposedDate().isBlank() ? null : updates.getProposedDate());
+        if (updates.getProposedTime() != null) existing.setProposedTime(updates.getProposedTime().isBlank() ? null : updates.getProposedTime());
+        if (updates.getRescheduleProposedBy() != null) existing.setRescheduleProposedBy(updates.getRescheduleProposedBy().isBlank() ? null : updates.getRescheduleProposedBy());
+        existing.setUpdatedAt(Instant.now());
+        return bookingRepository.save(existing);
+    }
+
+    public Booking rescheduleBooking(String id, String userIdentifier, com.skillswap.dto.RescheduleRequest request) throws IOException {
+        Booking booking = getBookingById(id);
+
+        if (userIdentifier != null && !userIdentifier.isBlank()) {
+            validateParticipant(booking, userIdentifier);
+        }
+
+        if (request == null) {
+            throw new IllegalArgumentException("Reschedule request is required");
+        }
+        if (request.getProposedDate() == null || request.getProposedDate().isBlank()) {
+            throw new IllegalArgumentException("Proposed date is required");
+        }
+        if (request.getProposedTime() == null || request.getProposedTime().isBlank()) {
+            throw new IllegalArgumentException("Proposed time is required");
+        }
+
+        java.time.LocalDate date;
+        try {
+            date = java.time.LocalDate.parse(request.getProposedDate().trim());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid date format. Expected yyyy-MM-dd");
+        }
+
+        if (date.isBefore(java.time.LocalDate.now())) {
+            throw new IllegalArgumentException("Proposed date cannot be in the past");
+        }
+
+        String proposer = request.getRescheduleProposedBy();
+        if (proposer == null || proposer.isBlank()) {
+            proposer = userIdentifier;
+        }
+
+        booking.setProposedDate(request.getProposedDate().trim());
+        booking.setProposedTime(request.getProposedTime().trim());
+        booking.setRescheduleProposedBy(proposer);
+        booking.setStatus("Postponed");
+        booking.setUpdatedAt(Instant.now());
+
+        return bookingRepository.save(booking);
+    }
+
+    public Booking acceptReschedule(String id, String userIdentifier) throws IOException {
+        Booking booking = getBookingById(id);
+
+        if (userIdentifier != null && !userIdentifier.isBlank()) {
+            validateParticipant(booking, userIdentifier);
+        }
+
+        if (booking.getProposedDate() == null || booking.getProposedDate().isBlank() ||
+            booking.getProposedTime() == null || booking.getProposedTime().isBlank()) {
+            throw new IllegalArgumentException("No pending reschedule proposal found for this session");
+        }
+
+        if (userIdentifier != null && !userIdentifier.isBlank()) {
+            String uid = userIdentifier.trim().toLowerCase();
+            String proposedBy = booking.getRescheduleProposedBy() != null ? booking.getRescheduleProposedBy().trim().toLowerCase() : "";
+            if (!proposedBy.isEmpty() && uid.equals(proposedBy)) {
+                throw new IllegalArgumentException("The other participant must accept the reschedule proposal");
+            }
+            User u = userRepository.findById(userIdentifier.trim()).orElse(null);
+            if (u != null && u.getEmail() != null && u.getEmail().trim().toLowerCase().equals(proposedBy)) {
+                throw new IllegalArgumentException("The other participant must accept the reschedule proposal");
+            }
+        }
+
+        booking.setDate(booking.getProposedDate());
+        booking.setTime(booking.getProposedTime());
+        booking.setProposedDate(null);
+        booking.setProposedTime(null);
+        booking.setRescheduleProposedBy(null);
+        booking.setStatus("Accepted");
+        booking.setUpdatedAt(Instant.now());
+
+        return bookingRepository.save(booking);
+    }
+
+    private void validateParticipant(Booking booking, String userIdentifier) {
+        String uid = userIdentifier.trim().toLowerCase();
+        String sEmail = booking.getStudentEmail() != null ? booking.getStudentEmail().toLowerCase() : "";
+        String tEmail = booking.getTeacherEmail() != null ? booking.getTeacherEmail().toLowerCase() : "";
+
+        if (uid.equals(sEmail) || uid.equals(tEmail)) {
+            return;
+        }
+
+        User u = userRepository.findById(userIdentifier.trim())
+                .or(() -> userRepository.findByEmail(userIdentifier.trim()))
+                .orElse(null);
+
+        if (u != null) {
+            String uEmail = u.getEmail() != null ? u.getEmail().toLowerCase() : "";
+            if (uEmail.equals(sEmail) || uEmail.equals(tEmail)) {
+                return;
+            }
+        }
+
+        throw new IllegalArgumentException("User " + userIdentifier + " is not an authorized participant of this booking");
     }
 
     public void deleteBooking(String id) throws IOException {

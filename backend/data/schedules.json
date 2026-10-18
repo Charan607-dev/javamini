@@ -1,9 +1,20 @@
-[ {
-  "id" : "6ca0d0d7-5d31-4cb9-9703-ac5c712d58bf",
-  "userId" : "014fdc2c-3bc1-4324-bee1-9f61177d9187",
-  "title" : "Office Hours",
-  "date" : "Monday",
-  "time" : "10:00 - 12:00",
-  "description" : "Available for Q&A",
-  "createdAt" : "2026-10-18T11:52:37.232917400Z"
-} ]
+[
+  {
+    "id": "6ca0d0d7-5d31-4cb9-9703-ac5c712d58bf",
+    "userId": "014fdc2c-3bc1-4324-bee1-9f61177d9187",
+    "title": "Office Hours & Code Reviews",
+    "date": "Monday",
+    "time": "10:00 - 12:00",
+    "description": "Available for Spring Boot architecture discussions and pair programming",
+    "createdAt": "2026-10-18T11:52:37.232917400Z"
+  },
+  {
+    "id": "7db1e1e8-6e42-5dc0-a814-bd6d823e69cf",
+    "userId": "38127654-4aa2-4838-a6b5-e458f154ce0a",
+    "title": "UI Wireframing Workshop",
+    "date": "Wednesday",
+    "time": "15:00 - 17:00",
+    "description": "Figma layout and prototyping practice session",
+    "createdAt": "2026-10-18T12:12:00.000Z"
+  }
+]

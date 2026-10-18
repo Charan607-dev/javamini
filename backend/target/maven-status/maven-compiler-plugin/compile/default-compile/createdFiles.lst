@@ -7,6 +7,7 @@ com\skillswap\repository\MessageRepository.class
 com\skillswap\controller\UserController.class
 com\skillswap\exception\ResourceNotFoundException.class
 com\skillswap\dto\RegisterRequest.class
+com\skillswap\controller\BookingController$1.class
 com\skillswap\service\AuthService.class
 com\skillswap\controller\NotificationController.class
 com\skillswap\model\Schedule.class
@@ -32,6 +33,7 @@ com\skillswap\service\BookingService.class
 com\skillswap\controller\AuthController.class
 com\skillswap\exception\DuplicateResourceException.class
 com\skillswap\repository\ScheduleRepository.class
+com\skillswap\dto\RescheduleRequest.class
 com\skillswap\repository\UserRepository$1.class
 com\skillswap\repository\NotificationRepository$1.class
 com\skillswap\dto\LoginRequest.class

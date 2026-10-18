@@ -53,22 +53,39 @@ public class SkillService {
             throw new ResourceNotFoundException("User not found: " + lookup);
         }
 
-        String level = request.getLevel();
+        String level = request != null ? request.getLevel() : "Beginner";
         if (level == null || level.isBlank()) {
             level = "Beginner";
         }
 
+        String title = (request != null && request.getTitle() != null) ? request.getTitle().trim() : "Skill";
+        String category = (request != null && request.getCategory() != null) ? request.getCategory() : "Technology";
+        String description = (request != null && request.getDescription() != null) ? request.getDescription().trim() : "";
+        String wants = (request != null && request.getWants() != null) ? request.getWants().trim() : "";
+
         Skill skill = new Skill(
                 user.getEmail(),
                 user.getName(),
-                request.getTitle().trim(),
-                request.getCategory() != null ? request.getCategory() : "Technology",
-                request.getDescription() != null ? request.getDescription().trim() : "",
+                title,
+                category,
+                description,
                 level,
-                request.getWants() != null ? request.getWants().trim() : ""
+                wants
         );
 
         return skillRepository.save(skill);
+    }
+
+    public Skill updateSkill(String id, SkillRequest request) throws IOException {
+        Skill existing = getSkillById(id);
+        if (request != null) {
+            if (request.getTitle() != null && !request.getTitle().isBlank()) existing.setTitle(request.getTitle().trim());
+            if (request.getCategory() != null && !request.getCategory().isBlank()) existing.setCategory(request.getCategory());
+            if (request.getDescription() != null) existing.setDescription(request.getDescription().trim());
+            if (request.getLevel() != null && !request.getLevel().isBlank()) existing.setLevel(request.getLevel());
+            if (request.getWants() != null) existing.setWants(request.getWants().trim());
+        }
+        return skillRepository.save(existing);
     }
 
     public void deleteSkill(String id) throws IOException {

@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { CalendarDays, GraduationCap } from 'lucide-react'
 
+import skillService from '../services/skillService'
+import authService from '../services/authService'
+
 const USER_KEY = 'skillswap_user'
 const SKILLS_KEY = 'skillswap_skills'
 
@@ -20,9 +23,18 @@ export default function Dashboard() {
     const [user, setUser] = useState(() => readJSON(USER_KEY, null))
     const [skills, setSkills] = useState(() => readJSON(SKILLS_KEY, []))
 
-    const refresh = useCallback(() => {
+    const refresh = useCallback(async () => {
         setUser(readJSON(USER_KEY, null))
-        setSkills(readJSON(SKILLS_KEY, []))
+        try {
+            const liveSkills = await skillService.getAllSkills()
+            if (Array.isArray(liveSkills) && liveSkills.length > 0) {
+                setSkills(liveSkills)
+            } else {
+                setSkills(readJSON(SKILLS_KEY, []))
+            }
+        } catch {
+            setSkills(readJSON(SKILLS_KEY, []))
+        }
     }, [])
 
     useEffect(() => {

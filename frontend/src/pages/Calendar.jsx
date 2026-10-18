@@ -7,7 +7,12 @@ import {
     Clock,
     MessageCircle,
     Send,
+    Loader2,
+    RefreshCw,
+    AlertCircle,
 } from 'lucide-react'
+import requestService from '../services/requestService'
+import messageService from '../services/messageService'
 
 const USER_KEY = 'skillswap_user'
 const BOOKINGS_KEY = 'skillswap_bookings'
@@ -65,11 +70,29 @@ export default function Calendar() {
     const [newTime, setNewTime] = useState('')
     const [notice, setNotice] = useState('')
 
-    function refresh() {
-        setBookings(readJSON(BOOKINGS_KEY, []))
+    // Chat and reschedule states
+    const [messages, setMessages] = useState([])
+    const [loadingMessages, setLoadingMessages] = useState(false)
+    const [sendingMessage, setSendingMessage] = useState(false)
+    const [messageError, setMessageError] = useState('')
+    const [rescheduleLoading, setRescheduleLoading] = useState(false)
+    const [rescheduleError, setRescheduleError] = useState('')
+
+    async function refresh() {
+        try {
+            const data = await requestService.getAllRequests()
+            if (Array.isArray(data) && data.length > 0) {
+                setBookings(data)
+            } else {
+                setBookings(readJSON(BOOKINGS_KEY, []))
+            }
+        } catch {
+            setBookings(readJSON(BOOKINGS_KEY, []))
+        }
     }
 
     useEffect(() => {
+        refresh()
         const listener = () => refresh()
         window.addEventListener('storage', listener)
         window.addEventListener('skillswap-bookings-updated', listener)
@@ -98,138 +121,208 @@ export default function Calendar() {
     const isRequester =
         (selected?.studentEmail || '').toLowerCase() === email
 
-    const messages = Array.isArray(selected?.messages)
-        ? selected.messages
-        : []
-
-    function updateBooking(id, changes) {
-        const latest = readJSON(BOOKINGS_KEY, [])
-        const updated = latest.map((booking) =>
-            booking.id === id
-                ? { ...booking, ...changes, updatedAt: new Date().toISOString() }
-                : booking
-        )
-        saveBookings(updated)
-        setBookings(updated)
-    }
-
-    function acceptBooking() {
-        if (!selected) return
-        updateBooking(selected.id, {
-            status: 'Accepted',
-            respondedAt: new Date().toISOString(),
-        })
-        setNotice('Booking accepted.')
-    }
-
-    function rejectBooking() {
-        if (!selected) return
-        updateBooking(selected.id, {
-            status: 'Rejected',
-            respondedAt: new Date().toISOString(),
-        })
-        setNotice('Booking rejected.')
-    }
-
-    function proposeTime(event) {
-        event.preventDefault()
-
-        if (!selected || !newDate || !newTime) {
-            setNotice('Select a new date and time first.')
+    // Fetch conversation for selected booking
+    useEffect(() => {
+        if (!selected || !user) {
+            setMessages([])
             return
         }
 
-        const proposed = {
-            proposedDate: newDate,
-            proposedTime: newTime,
-            rescheduleProposedBy: user.email,
-            status: 'Postponed',
+        let isMounted = true
+        const otherEmail = isOwner ? selected.studentEmail : selected.teacherEmail
+
+        async function fetchMessages(showSpinner = false) {
+            if (showSpinner) setLoadingMessages(true)
+            try {
+                const convo = await messageService.getConversation(user.email, otherEmail, selected.id)
+                if (isMounted && Array.isArray(convo)) {
+                    setMessages(convo)
+                    setMessageError('')
+                }
+            } catch (err) {
+                if (isMounted && showSpinner) {
+                    setMessageError('Unable to sync messages with server.')
+                }
+            } finally {
+                if (isMounted && showSpinner) setLoadingMessages(false)
+            }
         }
 
-        const latest = readJSON(BOOKINGS_KEY, [])
-        const updated = latest.map((booking) => {
-            if (booking.id !== selected.id) return booking
+        fetchMessages(true)
+        const pollTimer = setInterval(() => {
+            fetchMessages(false)
+        }, 4000)
 
-            const oldMessages = Array.isArray(booking.messages)
-                ? booking.messages
-                : []
+        return () => {
+            isMounted = false
+            clearInterval(pollTimer)
+        }
+    }, [selected?.id, user?.email, isOwner])
 
-            return {
-                ...booking,
-                ...proposed,
-                messages: [
-                    ...oldMessages,
-                    {
-                        id: crypto.randomUUID(),
-                        senderEmail: user.email,
-                        senderName: user.name,
-                        text: `Proposed a new session time: ${showDate(newDate)} at ${newTime}. Please review.`,
-                        createdAt: new Date().toISOString(),
-                    },
-                ],
-                updatedAt: new Date().toISOString(),
+    async function updateBooking(id, changes) {
+        if (changes.status) {
+            try {
+                await requestService.updateStatus(id, changes.status)
+            } catch (err) {
+                console.warn('Could not update booking status on backend:', err)
             }
-        })
-
-        saveBookings(updated)
-        setBookings(updated)
-        setNewDate('')
-        setNewTime('')
-        setNotice('Reschedule proposal saved.')
+        }
+        await refresh()
     }
 
-    function acceptProposal() {
+    async function acceptBooking() {
+        if (!selected) return
+        try {
+            await requestService.updateStatus(selected.id, 'Accepted')
+            setNotice('Booking accepted.')
+            await refresh()
+        } catch (err) {
+            setNotice('Failed to accept booking: ' + (err.message || 'Server error'))
+        }
+    }
+
+    async function rejectBooking() {
+        if (!selected) return
+        try {
+            await requestService.updateStatus(selected.id, 'Rejected')
+            setNotice('Booking rejected.')
+            await refresh()
+        } catch (err) {
+            setNotice('Failed to reject booking: ' + (err.message || 'Server error'))
+        }
+    }
+
+    async function proposeTime(event) {
+        event.preventDefault()
+        setRescheduleError('')
+
+        if (!selected) {
+            setRescheduleError('No booking selected.')
+            return
+        }
+        if (!newDate || !newTime) {
+            setRescheduleError('Select a valid new date and time.')
+            return
+        }
+
+        const today = new Date().toISOString().slice(0, 10)
+        if (newDate < today) {
+            setRescheduleError('Proposed date cannot be in the past.')
+            return
+        }
+
+        setRescheduleLoading(true)
+        try {
+            await requestService.rescheduleBooking(selected.id, {
+                proposedDate: newDate,
+                proposedTime: newTime,
+                rescheduleProposedBy: user.email,
+                userIdentifier: user.email,
+            })
+
+            // Post notification message in chat
+            const otherEmail = isOwner ? selected.studentEmail : selected.teacherEmail
+            try {
+                const autoMsg = await messageService.sendMessage({
+                    senderId: user.id || user.email,
+                    senderEmail: user.email,
+                    senderName: user.name,
+                    receiverId: otherEmail,
+                    receiverEmail: otherEmail,
+                    bookingId: selected.id,
+                    content: `Proposed a new session time: ${showDate(newDate)} at ${newTime}. Please review.`,
+                })
+                setMessages((prev) => [...prev, autoMsg])
+            } catch (chatErr) {
+                console.warn('Chat notification error:', chatErr)
+            }
+
+            setNewDate('')
+            setNewTime('')
+            setNotice('Reschedule proposal sent successfully.')
+            await refresh()
+        } catch (err) {
+            console.error('Reschedule failed:', err)
+            setRescheduleError(err.message || 'Failed to submit reschedule proposal.')
+        } finally {
+            setRescheduleLoading(false)
+        }
+    }
+
+    async function acceptProposal() {
         if (!selected?.proposedDate || !selected?.proposedTime) return
+        setRescheduleError('')
 
-        if (
-            (selected.rescheduleProposedBy || '').toLowerCase() === email
-        ) {
-            setNotice('The other participant must accept your proposal.')
+        if ((selected.rescheduleProposedBy || '').toLowerCase() === email) {
+            setRescheduleError('The other participant must accept your proposal.')
             return
         }
 
-        updateBooking(selected.id, {
-            status: 'Accepted',
-            date: selected.proposedDate,
-            time: selected.proposedTime,
-            proposedDate: '',
-            proposedTime: '',
-            rescheduleProposedBy: '',
-        })
-        setNotice('New session date and time confirmed.')
+        setRescheduleLoading(true)
+        try {
+            await requestService.acceptReschedule(selected.id, user.email)
+
+            // Post notification message in chat
+            const otherEmail = isOwner ? selected.studentEmail : selected.teacherEmail
+            try {
+                const autoMsg = await messageService.sendMessage({
+                    senderId: user.id || user.email,
+                    senderEmail: user.email,
+                    senderName: user.name,
+                    receiverId: otherEmail,
+                    receiverEmail: otherEmail,
+                    bookingId: selected.id,
+                    content: `Accepted reschedule proposal. Session confirmed for ${showDate(selected.proposedDate)} at ${selected.proposedTime}.`,
+                })
+                setMessages((prev) => [...prev, autoMsg])
+            } catch (chatErr) {
+                console.warn('Chat notification error:', chatErr)
+            }
+
+            setNotice('New session date and time confirmed.')
+            await refresh()
+        } catch (err) {
+            console.error('Accept reschedule failed:', err)
+            setRescheduleError(err.message || 'Failed to accept reschedule proposal.')
+        } finally {
+            setRescheduleLoading(false)
+        }
     }
 
-    function sendMessage(event) {
+    async function sendMessage(event) {
         event.preventDefault()
-        if (!selected || !message.trim() || !user) return
+        setMessageError('')
+        const trimmed = message.trim()
+        if (!selected || !trimmed || !user) {
+            if (!trimmed) setMessageError('Cannot send an empty message.')
+            return
+        }
 
-        const latest = readJSON(BOOKINGS_KEY, [])
-        const updated = latest.map((booking) => {
-            if (booking.id !== selected.id) return booking
+        const otherEmail = isOwner ? selected.studentEmail : selected.teacherEmail
+        setSendingMessage(true)
+        try {
+            const sent = await messageService.sendMessage({
+                senderId: user.id || user.email,
+                senderEmail: user.email,
+                senderName: user.name,
+                receiverId: otherEmail,
+                receiverEmail: otherEmail,
+                bookingId: selected.id,
+                content: trimmed,
+            })
 
-            const oldMessages = Array.isArray(booking.messages)
-                ? booking.messages
-                : []
-
-            return {
-                ...booking,
-                messages: [
-                    ...oldMessages,
-                    {
-                        id: crypto.randomUUID(),
-                        senderEmail: user.email,
-                        senderName: user.name,
-                        text: message.trim(),
-                        createdAt: new Date().toISOString(),
-                    },
-                ],
-            }
-        })
-
-        saveBookings(updated)
-        setBookings(updated)
-        setMessage('')
-        setNotice('Message sent.')
+            setMessages((prev) => {
+                if (prev.some((m) => m.id === sent.id)) return prev
+                return [...prev, sent]
+            })
+            setMessage('')
+            setNotice('Message sent.')
+        } catch (err) {
+            console.error('Send message failed:', err)
+            setMessageError(err.message || 'Failed to send message.')
+        } finally {
+            setSendingMessage(false)
+        }
     }
 
     if (!user) {
@@ -387,9 +480,10 @@ export default function Calendar() {
                                             <button
                                                 className="ss-button ss-button-success"
                                                 onClick={acceptProposal}
+                                                disabled={rescheduleLoading}
                                                 style={{ marginTop: 12 }}
                                             >
-                                                Accept new time
+                                                {rescheduleLoading ? 'Confirming...' : 'Accept new time'}
                                             </button>
                                         )}
                                         {(selected.rescheduleProposedBy || '').toLowerCase() === email && (
@@ -397,6 +491,13 @@ export default function Calendar() {
                                                 Waiting for the other participant to accept.
                                             </p>
                                         )}
+                                    </div>
+                                )}
+
+                                {rescheduleError && (
+                                    <div style={{ margin: '12px 0', padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem' }}>
+                                        <AlertCircle size={16} />
+                                        <span>{rescheduleError}</span>
                                     </div>
                                 )}
 
@@ -446,8 +547,8 @@ export default function Calendar() {
                                                     />
                                                 </label>
                                             </div>
-                                            <button className="ss-button ss-button-primary" type="submit">
-                                                Send reschedule proposal
+                                            <button className="ss-button ss-button-primary" type="submit" disabled={rescheduleLoading}>
+                                                {rescheduleLoading ? 'Sending proposal...' : 'Send reschedule proposal'}
                                             </button>
                                         </form>
                                     </section>
@@ -466,14 +567,25 @@ export default function Calendar() {
                                         </div>
                                     </div>
 
+                                    {messageError && (
+                                        <div style={{ margin: '8px 0', padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 6, color: '#b91c1c', fontSize: '0.85rem' }}>
+                                            {messageError}
+                                        </div>
+                                    )}
+
                                     <div className="ss-chat">
                                         <div className="ss-chat-messages">
-                                            {messages.length === 0 ? (
+                                            {loadingMessages && messages.length === 0 ? (
+                                                <div className="ss-empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                                                    <Loader2 size={16} className="animate-spin" /> Loading conversation...
+                                                </div>
+                                            ) : messages.length === 0 ? (
                                                 <div className="ss-empty">No messages yet. Start the conversation.</div>
                                             ) : (
                                                 messages.map((item) => {
                                                     const mine =
-                                                        (item.senderEmail || '').toLowerCase() === email
+                                                        (item.senderEmail || '').toLowerCase() === email ||
+                                                        (item.senderId && (item.senderId === user?.id || item.senderId.toLowerCase() === email))
 
                                                     return (
                                                         <div
@@ -481,12 +593,12 @@ export default function Calendar() {
                                                             key={item.id}
                                                         >
                                                             <span className="ss-message-sender">
-                                                                {mine ? 'You' : item.senderName || 'Participant'}
+                                                                {mine ? 'You' : item.senderName || (item.senderEmail === selected.studentEmail ? selected.student : selected.teacher) || 'Participant'}
                                                             </span>
-                                                            <p className="ss-message-body">{item.text}</p>
+                                                            <p className="ss-message-body">{item.content || item.text}</p>
                                                             <time className="ss-message-time">
-                                                                {item.createdAt
-                                                                    ? new Date(item.createdAt).toLocaleString()
+                                                                {item.timestamp || item.createdAt
+                                                                    ? new Date(item.timestamp || item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' · ' + new Date(item.timestamp || item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })
                                                                     : ''}
                                                             </time>
                                                         </div>
@@ -502,14 +614,15 @@ export default function Calendar() {
                                                 onChange={(e) => setMessage(e.target.value)}
                                                 placeholder="Discuss your session..."
                                                 maxLength={1000}
+                                                disabled={sendingMessage}
                                                 required
                                             />
                                             <button
                                                 className="ss-button ss-button-primary"
                                                 type="submit"
-                                                disabled={!message.trim()}
+                                                disabled={sendingMessage || !message.trim()}
                                             >
-                                                <Send size={16} /> Send
+                                                {sendingMessage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} Send
                                             </button>
                                         </form>
                                     </div>

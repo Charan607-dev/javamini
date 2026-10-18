@@ -10,6 +10,8 @@ import {
     MapPin,
 } from 'lucide-react'
 
+import requestService from '../services/requestService'
+
 const USER_KEY = 'skillswap_user'
 const BOOKINGS_KEY = 'skillswap_bookings'
 
@@ -72,8 +74,23 @@ export default function ScheduleCalendar() {
     const [selectedBookingId, setSelectedBookingId] = useState(bookingId || '')
 
     useEffect(() => {
+        async function fetchBookings() {
+            try {
+                const data = await requestService.getAllRequests()
+                if (Array.isArray(data) && data.length > 0) {
+                    setBookings(data)
+                } else {
+                    setBookings(readJSON(BOOKINGS_KEY, []))
+                }
+            } catch {
+                setBookings(readJSON(BOOKINGS_KEY, []))
+            }
+        }
+
+        fetchBookings()
+
         function refresh() {
-            setBookings(readJSON(BOOKINGS_KEY, []))
+            fetchBookings()
         }
 
         window.addEventListener('storage', refresh)

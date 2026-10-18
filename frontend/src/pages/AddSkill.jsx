@@ -1,7 +1,8 @@
-
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, PlusCircle } from 'lucide-react'
+import skillService from '../services/skillService'
+import authService from '../services/authService'
 
 export default function AddSkill() {
     const navigate = useNavigate()
@@ -9,34 +10,37 @@ export default function AddSkill() {
         title: '', category: 'Technology', description: '',
         level: 'Beginner', wants: ''
     })
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState('')
 
     function update(e) {
         setForm({ ...form, [e.target.name]: e.target.value })
     }
 
-    function submit(e) {
+    async function submit(e) {
         e.preventDefault()
+        setError('')
 
-        const user = JSON.parse(localStorage.getItem('skillswap_user') || 'null')
+        const user = authService.getCurrentUser()
         if (!user) {
             navigate('/login')
             return
         }
 
-        const skills = JSON.parse(localStorage.getItem('skillswap_skills') || '[]')
-        skills.push({
-            id: crypto.randomUUID(),
-            ownerEmail: user.email,
-            ownerName: user.name,
-            ...form,
-            title: form.title.trim(),
-            description: form.description.trim(),
-            wants: form.wants.trim(),
-            createdAt: new Date().toISOString()
-        })
-
-        localStorage.setItem('skillswap_skills', JSON.stringify(skills))
-        navigate('/explore')
+        setLoading(true)
+        try {
+            await skillService.createSkill({
+                ...form,
+                userId: user.id || user.email,
+                ownerEmail: user.email,
+                ownerName: user.name
+            })
+            navigate('/explore')
+        } catch (err) {
+            setError(err.message || 'Failed to publish skill. Please try again.')
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -48,6 +52,8 @@ export default function AddSkill() {
                     <span className="section-kicker">SHARE WHAT YOU KNOW</span>
                     <h1>Offer a <span className="gradient-text">skill.</span></h1>
                     <p className="auth-subtitle">Tell other students what you can teach and what you want to learn in return.</p>
+
+                    {error && <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
 
                     <form onSubmit={submit}>
                         <label htmlFor="skill-title">Skill you can teach</label>
@@ -81,8 +87,8 @@ export default function AddSkill() {
                         <input id="wants" name="wants" value={form.wants} onChange={update}
                             placeholder="e.g. UI/UX design" required maxLength={100} />
 
-                        <button className="btn btn-primary auth-submit" type="submit">
-                            Publish my skill
+                        <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
+                            {loading ? 'Publishing...' : 'Publish my skill'}
                         </button>
                     </form>
                 </div>

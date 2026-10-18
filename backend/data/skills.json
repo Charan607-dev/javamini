@@ -4,18 +4,58 @@
   "ownerName" : "Bob Smith",
   "title" : "Figma & UI Design",
   "category" : "Design",
-  "description" : "Wireframing and user interface design",
+  "description" : "Wireframing, interactive prototypes, and design systems.",
   "level" : "Intermediate",
-  "wants" : "Java Backend",
+  "wants" : "Java & Spring Boot 3",
   "createdAt" : "2026-10-18T11:52:37.098601800Z"
+}, {
+  "id" : "e2831c81-8172-47ef-8fa2-038e9d9e4a01",
+  "ownerEmail" : "charlie@college.edu",
+  "ownerName" : "Charlie Davis",
+  "title" : "Data Structures & Python",
+  "category" : "Technology",
+  "description" : "Binary search trees, graphs, dynamic programming, and technical interview prep.",
+  "level" : "Advanced",
+  "wants" : "Conversational Spanish",
+  "createdAt" : "2026-10-18T12:00:00Z"
+}, {
+  "id" : "f3942d92-9283-48fa-90b3-149fae0f5b12",
+  "ownerEmail" : "diana@college.edu",
+  "ownerName" : "Diana Martinez",
+  "title" : "Conversational Spanish",
+  "category" : "Languages",
+  "description" : "Interactive conversation practice, grammar fundamentals, and pronunciation.",
+  "level" : "Intermediate",
+  "wants" : "Data Structures & Python",
+  "createdAt" : "2026-10-18T12:05:00Z"
 }, {
   "id" : "d93abf74-a1cc-4bb6-848b-3f51c441559a",
   "ownerEmail" : "alice@college.edu",
   "ownerName" : "Alice Johnson",
   "title" : "Java & Spring Boot 3",
   "category" : "Technology",
-  "description" : "Full stack backend development and microservices",
+  "description" : "Full stack backend development, REST APIs, and microservices architecture.",
   "level" : "Advanced",
-  "wants" : "UI/UX Design",
+  "wants" : "Figma & UI Design",
   "createdAt" : "2026-10-18T11:52:37.080759600Z"
+}, {
+  "id" : "78a451c8-5ddc-4c31-a6b1-853b7ae0e35d",
+  "ownerEmail" : "scharanraj99@gmail.com",
+  "ownerName" : "Charan Raj",
+  "title" : "python",
+  "category" : "Languages",
+  "description" : "Basics",
+  "level" : "Beginner",
+  "wants" : "Java",
+  "createdAt" : "2026-10-18T12:52:57.239151900Z"
+}, {
+  "id" : "fc18271d-2dc8-4cb9-ae8a-cf7ec8333399",
+  "ownerEmail" : "sakhipriya2508@gmail.com",
+  "ownerName" : "Priya",
+  "title" : "Java",
+  "category" : "Languages",
+  "description" : "basic",
+  "level" : "Beginner",
+  "wants" : "Python",
+  "createdAt" : "2026-10-18T12:53:51.765004600Z"
 } ]

@@ -1,26 +1,38 @@
-
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Zap } from 'lucide-react'
+import authService from '../services/authService'
 
 export default function Register() {
     const [form, setForm] = useState({
-        name: '', email: '', college: ''
+        name: '', email: '', college: '', password: 'password123'
     })
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
 
     function update(e) {
         setForm({ ...form, [e.target.name]: e.target.value })
     }
 
-    function handleSubmit(e) {
+    async function handleSubmit(e) {
         e.preventDefault()
-        localStorage.setItem('skillswap_user', JSON.stringify({
-            name: form.name.trim(),
-            email: form.email.trim(),
-            college: form.college.trim()
-        }))
-        navigate('/dashboard')
+        setError('')
+        setLoading(true)
+
+        try {
+            await authService.register({
+                name: form.name.trim(),
+                email: form.email.trim(),
+                college: form.college.trim(),
+                password: form.password || 'password123'
+            })
+            navigate('/dashboard')
+        } catch (err) {
+            setError(err.message || 'Registration failed. Please check your details.')
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -36,6 +48,8 @@ export default function Register() {
                 <h1>Every skill has<br />something to offer.</h1>
                 <p className="auth-subtitle">Create your student profile to get started.</p>
 
+                {error && <div style={{ color: '#ef4444', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
+
                 <form onSubmit={handleSubmit}>
                     <label htmlFor="reg-name">Full name</label>
                     <input id="reg-name" name="name" value={form.name}
@@ -49,13 +63,13 @@ export default function Register() {
                     <input id="college" name="college" value={form.college}
                         onChange={update} placeholder="Your institution" required />
 
-                    <button className="btn btn-primary auth-submit" type="submit">
-                        Create student profile <ArrowLeft className="button-arrow" size={17} />
+                    <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>
+                        {loading ? 'Creating account...' : 'Create student profile'} <ArrowLeft className="button-arrow" size={17} />
                     </button>
                 </form>
 
                 <p className="auth-switch">Already started? <Link to="/login">Log in</Link></p>
-                <p className="demo-note">Prototype registration · No account is created on a server</p>
+                <p className="demo-note">Connected to Spring Boot REST backend</p>
             </div>
         </div>
     )

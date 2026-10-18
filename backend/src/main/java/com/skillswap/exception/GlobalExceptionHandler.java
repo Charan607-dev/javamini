@@ -37,7 +37,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             IllegalArgumentException.class,
             MissingServletRequestParameterException.class,
-            HttpMessageNotReadableException.class
+            HttpMessageNotReadableException.class,
+            org.springframework.web.HttpMediaTypeNotSupportedException.class,
+            org.springframework.web.HttpMediaTypeNotAcceptableException.class
     })
     public ResponseEntity<Map<String, Object>> handleBadRequest(Exception ex) {
         return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());

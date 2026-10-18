@@ -29,8 +29,14 @@ public class ChatController {
     @GetMapping("/conversation")
     public ResponseEntity<List<Message>> getConversation(
             @RequestParam String user1,
-            @RequestParam String user2) {
-        return ResponseEntity.ok(chatService.getConversation(user1, user2));
+            @RequestParam String user2,
+            @RequestParam(required = false) String bookingId) {
+        return ResponseEntity.ok(chatService.getConversation(user1, user2, bookingId));
+    }
+
+    @GetMapping("/booking/{bookingId}")
+    public ResponseEntity<List<Message>> getMessagesByBookingId(@PathVariable String bookingId) {
+        return ResponseEntity.ok(chatService.getMessagesByBookingId(bookingId));
     }
 
     @PostMapping

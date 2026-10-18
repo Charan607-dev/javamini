@@ -70,14 +70,22 @@ public class MessageRepository {
     public List<Message> findConversation(String userId1, String userId2) {
         return messages.values().stream()
                 .filter(m ->
-                        (userId1.equals(m.getSenderId()) && userId2.equals(m.getReceiverId())) ||
-                        (userId2.equals(m.getSenderId()) && userId1.equals(m.getReceiverId())))
-                .sorted(Comparator.comparing(Message::getTimestamp))
+                        (userId1.equalsIgnoreCase(m.getSenderId()) && userId2.equalsIgnoreCase(m.getReceiverId())) ||
+                        (userId2.equalsIgnoreCase(m.getSenderId()) && userId1.equalsIgnoreCase(m.getReceiverId())))
+                .sorted(Comparator.comparing(m -> m.getTimestamp() != null ? m.getTimestamp() : java.time.Instant.EPOCH))
                 .toList();
     }
 
     public List<Message> findByConversation(String userId1, String userId2) {
         return findConversation(userId1, userId2);
+    }
+
+    public List<Message> findByBookingId(String bookingId) {
+        if (bookingId == null || bookingId.isBlank()) return List.of();
+        return messages.values().stream()
+                .filter(m -> bookingId.equalsIgnoreCase(m.getBookingId()))
+                .sorted(Comparator.comparing(m -> m.getTimestamp() != null ? m.getTimestamp() : java.time.Instant.EPOCH))
+                .toList();
     }
 
     public Message save(Message message) throws IOException {

@@ -46,6 +46,18 @@ public class ScheduleService {
         return scheduleRepository.save(schedule);
     }
 
+    public Schedule updateSchedule(String id, ScheduleRequest request) throws IOException {
+        Schedule existing = scheduleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Schedule not found: " + id));
+        if (request != null) {
+            if (request.getTitle() != null && !request.getTitle().isBlank()) existing.setTitle(request.getTitle());
+            if (request.getDate() != null && !request.getDate().isBlank()) existing.setDate(request.getDate());
+            if (request.getTime() != null && !request.getTime().isBlank()) existing.setTime(request.getTime());
+            if (request.getDescription() != null) existing.setDescription(request.getDescription().trim());
+        }
+        return scheduleRepository.save(existing);
+    }
+
     public void deleteSchedule(String id) throws IOException {
         if (scheduleRepository.findById(id).isEmpty()) {
             throw new ResourceNotFoundException("Schedule not found: " + id);

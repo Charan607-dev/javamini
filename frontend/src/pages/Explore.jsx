@@ -9,6 +9,8 @@ import {
     ArrowRightLeft,
     BookOpen,
 } from 'lucide-react'
+import skillService from '../services/skillService'
+import requestService from '../services/requestService'
 
 const USER_KEY = 'skillswap_user'
 const SKILLS_KEY = 'skillswap_skills'
@@ -57,17 +59,29 @@ export default function Explore() {
     const [error, setError] = useState('')
 
     useEffect(() => {
-        const refresh = () => {
+        const refresh = async () => {
             setUser(readStorage(USER_KEY, null))
-            setSkills(readStorage(SKILLS_KEY))
+            try {
+                const liveSkills = await skillService.getAllSkills()
+                if (Array.isArray(liveSkills) && liveSkills.length > 0) {
+                    setSkills(liveSkills)
+                } else {
+                    setSkills(readStorage(SKILLS_KEY))
+                }
+            } catch {
+                setSkills(readStorage(SKILLS_KEY))
+            }
         }
 
+        refresh()
         window.addEventListener('focus', refresh)
         window.addEventListener('storage', refresh)
+        window.addEventListener('skillswap-skills-updated', refresh)
 
         return () => {
             window.removeEventListener('focus', refresh)
             window.removeEventListener('storage', refresh)
+            window.removeEventListener('skillswap-skills-updated', refresh)
         }
     }, [])
 
@@ -124,7 +138,7 @@ export default function Explore() {
         setError('')
     }
 
-    const bookSlot = (event) => {
+    const bookSlot = async (event) => {
         event.preventDefault()
         setError('')
 
@@ -162,37 +176,21 @@ export default function Explore() {
             return
         }
 
-        const bookings = readStorage(BOOKINGS_KEY)
+        try {
+            await requestService.createRequest({
+                skillId: selectedSkill.id,
+                exchangeSkillId: exchangeSkill.id,
+                date,
+                time,
+                studentId: user.id || user.email,
+                notes: `Exchange for ${exchangeSkill.title}`
+            })
 
-        const booking = {
-            id: crypto.randomUUID(),
-            skillId: selectedSkill.id,
-            title: selectedSkill.title,
-            category: selectedSkill.category || 'General',
-
-            // Student providing the requested skill.
-            teacher: selectedSkill.ownerName || 'Student',
-            teacherEmail: selectedSkill.ownerEmail || '',
-
-            // Student making the request.
-            student: user.name,
-            studentEmail: user.email || '',
-
-            // Skill offered in return.
-            exchangeSkill: exchangeSkill.title,
-            exchangeSkillId: exchangeSkill.id,
-
-            date,
-            time,
-            status: 'Requested',
-            createdAt: new Date().toISOString(),
+            setSelectedSkill(null)
+            navigate('/calendar')
+        } catch (bookingErr) {
+            setError(bookingErr.message || 'Failed to submit booking request. Please try again.')
         }
-
-        bookings.push(booking)
-        localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings))
-
-        setSelectedSkill(null)
-        navigate('/calendar')
     }
 
     return (

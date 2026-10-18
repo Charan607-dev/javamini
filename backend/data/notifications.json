@@ -1,7 +1,16 @@
-[ {
-  "id" : "3c8c7784-d2ca-4508-8d57-479f847e55fa",
-  "userId" : "014fdc2c-3bc1-4324-bee1-9f61177d9187",
-  "message" : "You have a new booking request from Bob",
-  "read" : true,
-  "createdAt" : "2026-10-18T11:52:37.306045100Z"
-} ]
+[
+  {
+    "id": "3c8c7784-d2ca-4508-8d57-479f847e55fa",
+    "userId": "014fdc2c-3bc1-4324-bee1-9f61177d9187",
+    "message": "You have a new booking request from Bob Smith for Java & Spring Boot 3",
+    "read": true,
+    "createdAt": "2026-10-18T11:52:37.306045100Z"
+  },
+  {
+    "id": "4d9d8895-e3db-5619-9e68-580a958f66ab",
+    "userId": "38127654-4aa2-4838-a6b5-e458f154ce0a",
+    "message": "Alice Johnson confirmed your learning session for Oct 25 at 14:00!",
+    "read": false,
+    "createdAt": "2026-10-18T12:15:00.000Z"
+  }
+]

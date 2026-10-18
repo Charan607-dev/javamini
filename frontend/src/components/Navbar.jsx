@@ -46,6 +46,10 @@ export default function Navbar() {
                             Dashboard
                         </NavLink>
 
+                        <NavLink to="/find-matches">
+                            Matches
+                        </NavLink>
+
                         <NavLink to="/calendar">
                             <CalendarDays size={16} />
                             Bookings
