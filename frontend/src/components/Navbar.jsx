@@ -1,4 +1,3 @@
-
 import { Link, NavLink, useNavigate } from 'react-router-dom'
 import {
     Zap,
@@ -7,10 +6,14 @@ import {
     ArrowUpRight,
     LogOut,
     UserRound,
+    Sun,
+    Moon,
 } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
 
 export default function Navbar() {
     const navigate = useNavigate()
+    const { theme, toggleTheme } = useTheme()
 
     const getUser = () => {
         try {
@@ -59,6 +62,17 @@ export default function Navbar() {
             </div>
 
             <div className="nav-actions">
+                {/* Theme toggle */}
+                <button
+                    type="button"
+                    className="nav-theme-toggle"
+                    onClick={toggleTheme}
+                    aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+                    title={theme === 'dark' ? 'Dark mode (click to switch to light mode)' : 'Light mode (click to switch to dark mode)'}
+                >
+                    {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+                </button>
+
                 {user ? (
                     <>
                         <span className="nav-user">

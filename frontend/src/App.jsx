@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
+import { ThemeProvider } from './context/ThemeContext'
 import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Login from './pages/Login'
@@ -17,7 +18,7 @@ import Reviews from './pages/Reviews'
 
 export default function App() {
   return (
-    <>
+    <ThemeProvider>
       <Navbar />
 
       <Routes>
@@ -38,6 +39,6 @@ export default function App() {
         <Route path="/add-skill" element={<AddSkill />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </ThemeProvider>
   )
 }
