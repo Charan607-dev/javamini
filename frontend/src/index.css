@@ -377,6 +377,7 @@ button { cursor: pointer; }
 
 /* Nav theme toggle */
 .nav-theme-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -388,18 +389,15 @@ button { cursor: pointer; }
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: #F1F5F9;
   cursor: pointer;
-  transition: background .15s, color .15s, transform .15s, border-color .15s;
+  overflow: hidden;               /* keeps rotating icon from poking outside */
+  /* Only background/color transitions — transforms are owned by Framer Motion */
+  transition: background .15s, color .15s, border-color .15s;
 }
 
 .nav-theme-toggle:hover {
   background: rgba(255, 255, 255, 0.16);
   color: #FFFFFF;
   border-color: rgba(255, 255, 255, 0.25);
-  transform: translateY(-1px);
-}
-
-.nav-theme-toggle:active {
-  transform: translateY(0);
 }
 
 .nav-theme-toggle:focus-visible {
@@ -1372,6 +1370,7 @@ button { cursor: pointer; }
 }
 
 /* ─── Stats strip ────────────────────────────────────────────────────────────── */
+
 .stats-strip {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

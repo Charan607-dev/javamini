@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     ArrowLeft,
     CalendarDays,
@@ -13,6 +14,7 @@ import {
 } from 'lucide-react'
 import requestService from '../services/requestService'
 import messageService from '../services/messageService'
+import { pageVariants, pageTransition, staggerContainer, staggerChild, slideUp, popIn } from '../utils/animations'
 
 const USER_KEY = 'skillswap_user'
 const BOOKINGS_KEY = 'skillswap_bookings'
@@ -327,7 +329,7 @@ export default function Calendar() {
 
     if (!user) {
         return (
-            <main className="ss-page">
+            <motion.main className="ss-page" variants={pageVariants} initial="initial" animate="animate" transition={pageTransition}>
                 <div className="ss-container">
                     <section className="ss-panel">
                         <h1 className="ss-title">Log in to view bookings</h1>
@@ -336,86 +338,140 @@ export default function Calendar() {
                         </Link>
                     </section>
                 </div>
-            </main>
+            </motion.main>
         )
     }
 
     return (
-        <main className="ss-page">
+        <motion.main
+            className="ss-page"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            transition={pageTransition}
+        >
             <div className="ss-container">
-                <Link className="ss-back-link" to="/dashboard">
-                    <ArrowLeft size={16} /> Back to dashboard
-                </Link>
+                <motion.div whileHover={{ x: -3 }} transition={{ duration: 0.15 }}>
+                    <Link className="ss-back-link" to="/dashboard">
+                        <ArrowLeft size={16} /> Back to dashboard
+                    </Link>
+                </motion.div>
 
-                <header className="ss-header">
+                <motion.header
+                    className="ss-header"
+                    initial={{ opacity: 0, y: -14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                >
                     <div>
                         <p className="ss-eyebrow">SkillSwap</p>
-                        <h1 className="ss-title">Bookings & Calendar</h1>
+                        <h1 className="ss-title">Bookings &amp; Calendar</h1>
                         <p className="ss-subtitle">
                             Review session dates, manage rescheduling, and chat with the other participant.
                         </p>
                     </div>
-                    <Link className="ss-button ss-button-primary" to="/explore">
-                        Explore skills
-                    </Link>
-                </header>
+                    <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }}>
+                        <Link className="ss-button ss-button-primary" to="/explore">
+                            Explore skills
+                        </Link>
+                    </motion.div>
+                </motion.header>
 
-                {notice && <div className="ss-notice" role="status">{notice}</div>}
+                <AnimatePresence>
+                    {notice && (
+                        <motion.div
+                            className="ss-notice"
+                            role="status"
+                            {...popIn}
+                        >
+                            {notice}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {myBookings.length === 0 ? (
-                    <section className="ss-panel">
+                    <motion.section
+                        className="ss-panel"
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.15 }}
+                    >
                         <div className="ss-empty">
-                            <CalendarDays size={28} />
+                            <motion.div
+                                animate={{ y: [0, -6, 0] }}
+                                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                            >
+                                <CalendarDays size={28} />
+                            </motion.div>
                             <h2 className="ss-panel-title">No bookings yet</h2>
                             Your skill exchange bookings will appear here.
                         </div>
-                    </section>
+                    </motion.section>
                 ) : (
                     <div className="ss-calendar-grid">
-                        <section className="ss-panel">
+                        <motion.section
+                            className="ss-panel"
+                            initial={{ opacity: 0, x: -16 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.12 }}
+                        >
                             <div className="ss-panel-heading">
                                 <h2 className="ss-panel-title">
                                     Your bookings ({myBookings.length})
                                 </h2>
                             </div>
 
-                            {myBookings.map((booking) => (
-                                <button
-                                    type="button"
-                                    key={booking.id}
-                                    className={`ss-select-booking ${selected?.id === booking.id ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setSelectedId(booking.id)
-                                        setNotice('')
-                                    }}
-                                >
-                                    <div className="ss-card-top">
-                                        <span className="ss-card-title">
-                                            {booking.title || 'Skill exchange'}
-                                        </span>
-                                        <span className={statusClass(booking.status)}>
-                                            {booking.status || 'Requested'}
-                                        </span>
-                                    </div>
-                                    <p className="ss-card-text">
-                                        {booking.studentEmail?.toLowerCase() === email
-                                            ? `Skill owner: ${booking.teacher || 'Student'}`
-                                            : `Requested by: ${booking.student || 'Student'}`}
-                                    </p>
-                                    <p className="ss-card-text">
-                                        {showDate(booking.date)} · {booking.time || 'Time not set'}
-                                    </p>
-                                    {booking.proposedDate && booking.proposedTime && (
-                                        <p className="ss-proposal-text">
-                                            Proposed: {showDate(booking.proposedDate)} · {booking.proposedTime}
+                            <motion.div
+                                variants={staggerContainer}
+                                initial="initial"
+                                animate="animate"
+                            >
+                                {myBookings.map((booking) => (
+                                    <motion.button
+                                        type="button"
+                                        key={booking.id}
+                                        className={`ss-select-booking ${selected?.id === booking.id ? 'active' : ''}`}
+                                        onClick={() => {
+                                            setSelectedId(booking.id)
+                                            setNotice('')
+                                        }}
+                                        variants={staggerChild}
+                                        whileHover={{ x: 3, transition: { duration: 0.15 } }}
+                                        layout
+                                    >
+                                        <div className="ss-card-top">
+                                            <span className="ss-card-title">
+                                                {booking.title || 'Skill exchange'}
+                                            </span>
+                                            <span className={statusClass(booking.status)}>
+                                                {booking.status || 'Requested'}
+                                            </span>
+                                        </div>
+                                        <p className="ss-card-text">
+                                            {booking.studentEmail?.toLowerCase() === email
+                                                ? `Skill owner: ${booking.teacher || 'Student'}`
+                                                : `Requested by: ${booking.student || 'Student'}`}
                                         </p>
-                                    )}
-                                </button>
-                            ))}
-                        </section>
+                                        <p className="ss-card-text">
+                                            {showDate(booking.date)} · {booking.time || 'Time not set'}
+                                        </p>
+                                        {booking.proposedDate && booking.proposedTime && (
+                                            <p className="ss-proposal-text">
+                                                Proposed: {showDate(booking.proposedDate)} · {booking.proposedTime}
+                                            </p>
+                                        )}
+                                    </motion.button>
+                                ))}
+                            </motion.div>
+                        </motion.section>
 
+                        <AnimatePresence mode="wait">
                         {selected && (
-                            <section className="ss-panel">
+                            <motion.section
+                                className="ss-panel"
+                                key={selected.id}
+                                {...slideUp}
+                            >
                                 <div className="ss-panel-heading">
                                     <div>
                                         <p className="ss-eyebrow">
@@ -494,21 +550,39 @@ export default function Calendar() {
                                     </div>
                                 )}
 
+                                <AnimatePresence>
                                 {rescheduleError && (
-                                    <div style={{ margin: '12px 0', padding: '10px 14px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, color: '#b91c1c', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem' }}>
+                                    <motion.div
+                                        style={{ margin: '12px 0', padding: '10px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 8, color: 'var(--error)', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem' }}
+                                        initial={{ opacity: 0, y: -6 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0 }}
+                                        transition={{ duration: 0.25 }}
+                                    >
                                         <AlertCircle size={16} />
                                         <span>{rescheduleError}</span>
-                                    </div>
+                                    </motion.div>
                                 )}
+                                </AnimatePresence>
 
                                 {isOwner && selected.status === 'Requested' && (
                                     <div className="ss-card-actions">
-                                        <button className="ss-button ss-button-success" onClick={acceptBooking}>
+                                        <motion.button
+                                            className="ss-button ss-button-success"
+                                            onClick={acceptBooking}
+                                            whileHover={{ scale: 1.04, y: -1 }}
+                                            whileTap={{ scale: 0.97 }}
+                                        >
                                             Accept booking
-                                        </button>
-                                        <button className="ss-button ss-button-danger" onClick={rejectBooking}>
+                                        </motion.button>
+                                        <motion.button
+                                            className="ss-button ss-button-danger"
+                                            onClick={rejectBooking}
+                                            whileHover={{ scale: 1.04, y: -1 }}
+                                            whileTap={{ scale: 0.97 }}
+                                        >
                                             Reject booking
-                                        </button>
+                                        </motion.button>
                                     </div>
                                 )}
 
@@ -577,33 +651,51 @@ export default function Calendar() {
                                         <div className="ss-chat-messages">
                                             {loadingMessages && messages.length === 0 ? (
                                                 <div className="ss-empty" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                                                    <Loader2 size={16} className="animate-spin" /> Loading conversation...
+                                                    <motion.div
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                                    >
+                                                        <Loader2 size={16} />
+                                                    </motion.div>
+                                                    Loading conversation...
                                                 </div>
                                             ) : messages.length === 0 ? (
-                                                <div className="ss-empty">No messages yet. Start the conversation.</div>
+                                                <motion.div
+                                                    className="ss-empty"
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    transition={{ duration: 0.4 }}
+                                                >
+                                                    No messages yet. Start the conversation.
+                                                </motion.div>
                                             ) : (
-                                                messages.map((item) => {
-                                                    const mine =
-                                                        (item.senderEmail || '').toLowerCase() === email ||
-                                                        (item.senderId && (item.senderId === user?.id || item.senderId.toLowerCase() === email))
+                                                <AnimatePresence initial={false}>
+                                                    {messages.map((item) => {
+                                                        const mine =
+                                                            (item.senderEmail || '').toLowerCase() === email ||
+                                                            (item.senderId && (item.senderId === user?.id || item.senderId.toLowerCase() === email))
 
-                                                    return (
-                                                        <div
-                                                            className={`ss-message ${mine ? 'ss-message-mine' : ''}`}
-                                                            key={item.id}
-                                                        >
-                                                            <span className="ss-message-sender">
-                                                                {mine ? 'You' : item.senderName || (item.senderEmail === selected.studentEmail ? selected.student : selected.teacher) || 'Participant'}
-                                                            </span>
-                                                            <p className="ss-message-body">{item.content || item.text}</p>
-                                                            <time className="ss-message-time">
-                                                                {item.timestamp || item.createdAt
-                                                                    ? new Date(item.timestamp || item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' · ' + new Date(item.timestamp || item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })
-                                                                    : ''}
-                                                            </time>
-                                                        </div>
-                                                    )
-                                                })
+                                                        return (
+                                                            <motion.div
+                                                                className={`ss-message ${mine ? 'ss-message-mine' : ''}`}
+                                                                key={item.id}
+                                                                initial={{ opacity: 0, x: mine ? 16 : -16, scale: 0.97 }}
+                                                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                                                transition={{ duration: 0.25, ease: 'easeOut' }}
+                                                            >
+                                                                <span className="ss-message-sender">
+                                                                    {mine ? 'You' : item.senderName || (item.senderEmail === selected.studentEmail ? selected.student : selected.teacher) || 'Participant'}
+                                                                </span>
+                                                                <p className="ss-message-body">{item.content || item.text}</p>
+                                                                <time className="ss-message-time">
+                                                                    {item.timestamp || item.createdAt
+                                                                        ? new Date(item.timestamp || item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' · ' + new Date(item.timestamp || item.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric' })
+                                                                        : ''}
+                                                                </time>
+                                                            </motion.div>
+                                                        )
+                                                    })}
+                                                </AnimatePresence>
                                             )}
                                         </div>
 
@@ -617,21 +709,28 @@ export default function Calendar() {
                                                 disabled={sendingMessage}
                                                 required
                                             />
-                                            <button
+                                            <motion.button
                                                 className="ss-button ss-button-primary"
                                                 type="submit"
                                                 disabled={sendingMessage || !message.trim()}
+                                                whileHover={{ scale: 1.04 }}
+                                                whileTap={{ scale: 0.97 }}
                                             >
-                                                {sendingMessage ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} Send
-                                            </button>
+                                                {sendingMessage ? (
+                                                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}>
+                                                        <Loader2 size={16} />
+                                                    </motion.div>
+                                                ) : <Send size={16} />} Send
+                                            </motion.button>
                                         </form>
                                     </div>
                                 </section>
-                            </section>
+                            </motion.section>
                         )}
+                        </AnimatePresence>
                     </div>
                 )}
             </div>
-        </main>
+        </motion.main>
     )
 }

@@ -1,6 +1,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
     ArrowLeft,
     CalendarDays,
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react'
 
 import requestService from '../services/requestService'
+import { pageVariants, pageTransition, staggerContainer, staggerChild, slideUp } from '../utils/animations'
 
 const USER_KEY = 'skillswap_user'
 const BOOKINGS_KEY = 'skillswap_bookings'
@@ -167,7 +169,13 @@ export default function ScheduleCalendar() {
 
     if (!user) {
         return (
-            <main className="ss-page">
+            <motion.main
+                className="ss-page"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                transition={pageTransition}
+            >
                 <div className="ss-container">
                     <section className="ss-panel">
                         <h1 className="ss-title">Log in to view your schedule</h1>
@@ -176,18 +184,31 @@ export default function ScheduleCalendar() {
                         </Link>
                     </section>
                 </div>
-            </main>
+            </motion.main>
         )
     }
 
     return (
-        <main className="ss-page">
+        <motion.main
+            className="ss-page"
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            transition={pageTransition}
+        >
             <div className="ss-container">
-                <Link className="ss-back-link" to="/calendar">
-                    <ArrowLeft size={16} /> Back to bookings
-                </Link>
+                <motion.div whileHover={{ x: -3 }} transition={{ duration: 0.15 }}>
+                    <Link className="ss-back-link" to="/calendar">
+                        <ArrowLeft size={16} /> Back to bookings
+                    </Link>
+                </motion.div>
 
-                <header className="ss-header">
+                <motion.header
+                    className="ss-header"
+                    initial={{ opacity: 0, y: -14 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                >
                     <div>
                         <p className="ss-eyebrow">Your schedule</p>
                         <h1 className="ss-title">Schedule Calendar</h1>
@@ -195,18 +216,25 @@ export default function ScheduleCalendar() {
                             Select a date to view its sessions and booking details.
                         </p>
                     </div>
-                </header>
+                </motion.header>
 
                 <div className="ss-schedule-layout">
-                    <section className="ss-panel">
+                    <motion.section
+                        className="ss-panel"
+                        initial={{ opacity: 0, x: -16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.12 }}
+                    >
                         <div className="ss-calendar-toolbar">
-                            <button
+                            <motion.button
                                 className="ss-icon-button"
                                 onClick={() => changeMonth(-1)}
                                 aria-label="Previous month"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.92 }}
                             >
                                 <ChevronLeft size={20} />
-                            </button>
+                            </motion.button>
 
                             <h2 className="ss-panel-title">
                                 {month.toLocaleDateString(undefined, {
@@ -215,13 +243,15 @@ export default function ScheduleCalendar() {
                                 })}
                             </h2>
 
-                            <button
+                            <motion.button
                                 className="ss-icon-button"
                                 onClick={() => changeMonth(1)}
                                 aria-label="Next month"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.92 }}
                             >
                                 <ChevronRight size={20} />
-                            </button>
+                            </motion.button>
                         </div>
 
                         <div className="ss-month-grid">
@@ -244,7 +274,7 @@ export default function ScheduleCalendar() {
                                 const today = date === dateKey(new Date())
 
                                 return (
-                                    <button
+                                    <motion.button
                                         key={date}
                                         className={[
                                             'ss-calendar-day',
@@ -254,6 +284,8 @@ export default function ScheduleCalendar() {
                                         ].filter(Boolean).join(' ')}
                                         onClick={() => selectDay(day)}
                                         aria-label={`${date}, ${dayBookings.length} sessions`}
+                                        whileHover={{ scale: 1.08, transition: { duration: 0.15 } }}
+                                        whileTap={{ scale: 0.94 }}
                                     >
                                         <span>{day}</span>
                                         {dayBookings.length > 0 && (
@@ -261,7 +293,7 @@ export default function ScheduleCalendar() {
                                                 {dayBookings.length}
                                             </span>
                                         )}
-                                    </button>
+                                    </motion.button>
                                 )
                             })}
                         </div>
@@ -270,9 +302,14 @@ export default function ScheduleCalendar() {
                             <span><i className="ss-legend-dot" /> Scheduled session</span>
                             <span><i className="ss-legend-dot today-dot" /> Today</span>
                         </div>
-                    </section>
+                    </motion.section>
 
-                    <section className="ss-panel">
+                    <motion.section
+                        className="ss-panel"
+                        initial={{ opacity: 0, x: 16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.18 }}
+                    >
                         <p className="ss-eyebrow">Selected date</p>
                         <h2 className="ss-panel-title">{formatDate(selectedDate)}</h2>
                         <p className="ss-panel-description">
@@ -281,37 +318,55 @@ export default function ScheduleCalendar() {
 
                         <div className="ss-schedule-events">
                             {bookingsOnSelectedDate.length === 0 ? (
-                                <div className="ss-empty">
+                                <motion.div
+                                    className="ss-empty"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.35 }}
+                                >
                                     <CalendarDays size={26} />
                                     <p>No sessions scheduled on this date.</p>
                                     Choose another highlighted date to see your sessions.
-                                </div>
+                                </motion.div>
                             ) : (
-                                bookingsOnSelectedDate.map((booking) => (
-                                    <button
-                                        key={booking.id}
-                                        className={`ss-event-card ${selectedBookingId === booking.id ? 'active' : ''}`}
-                                        onClick={() => setSelectedBookingId(booking.id)}
-                                    >
-                                        <div className="ss-card-top">
-                                            <h3 className="ss-card-title">
-                                                {booking.title || 'Skill exchange'}
-                                            </h3>
-                                            <span className={statusClass(booking.status)}>
-                                                {booking.status || 'Requested'}
-                                            </span>
-                                        </div>
-                                        <p className="ss-card-text">
-                                            <Clock size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />
-                                            {booking.time || 'Time not set'}
-                                        </p>
-                                    </button>
-                                ))
+                                <motion.div
+                                    variants={staggerContainer}
+                                    initial="initial"
+                                    animate="animate"
+                                >
+                                    {bookingsOnSelectedDate.map((booking) => (
+                                        <motion.button
+                                            key={booking.id}
+                                            className={`ss-event-card ${selectedBookingId === booking.id ? 'active' : ''}`}
+                                            onClick={() => setSelectedBookingId(booking.id)}
+                                            variants={staggerChild}
+                                            whileHover={{ x: 3, transition: { duration: 0.15 } }}
+                                        >
+                                            <div className="ss-card-top">
+                                                <h3 className="ss-card-title">
+                                                    {booking.title || 'Skill exchange'}
+                                                </h3>
+                                                <span className={statusClass(booking.status)}>
+                                                    {booking.status || 'Requested'}
+                                                </span>
+                                            </div>
+                                            <p className="ss-card-text">
+                                                <Clock size={14} style={{ verticalAlign: 'middle', marginRight: 5 }} />
+                                                {booking.time || 'Time not set'}
+                                            </p>
+                                        </motion.button>
+                                    ))}
+                                </motion.div>
                             )}
                         </div>
 
+                        <AnimatePresence mode="wait">
                         {selectedBooking && selectedBooking.date === selectedDate && (
-                            <div className="ss-session-details">
+                            <motion.div
+                                className="ss-session-details"
+                                key={selectedBooking.id}
+                                {...slideUp}
+                            >
                                 <div className="ss-detail-heading">
                                     <CalendarDays size={19} />
                                     <h3 className="ss-panel-title">Session details</h3>
@@ -372,18 +427,21 @@ export default function ScheduleCalendar() {
                                 )}
 
                                 <div className="ss-card-actions">
-                                    <Link
-                                        className="ss-button ss-button-primary"
-                                        to={`/calendar?booking=${encodeURIComponent(selectedBooking.id)}`}
-                                    >
-                                        Open booking and chat
-                                    </Link>
+                                    <motion.div whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: 0.97 }}>
+                                        <Link
+                                            className="ss-button ss-button-primary"
+                                            to={`/calendar?booking=${encodeURIComponent(selectedBooking.id)}`}
+                                        >
+                                            Open booking and chat
+                                        </Link>
+                                    </motion.div>
                                 </div>
-                            </div>
+                            </motion.div>
                         )}
-                    </section>
+                        </AnimatePresence>
+                    </motion.section>
                 </div>
             </div>
-        </main>
+        </motion.main>
     )
 }
