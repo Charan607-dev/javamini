@@ -1,76 +1,27 @@
 package com.skillswap.repository;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillswap.model.Booking;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 
 @Repository
-public class BookingRepository {
+public interface BookingRepository extends JpaRepository<Booking, String> {
 
-    private final ObjectMapper mapper;
-    private final Map<String, Booking> bookings = new ConcurrentHashMap<>();
+    List<Booking> findByStudentEmailIgnoreCase(String studentEmail);
 
-    @Value("${app.data-dir:data}")
-    private String dataDir;
-
-    private File file;
-
-    public BookingRepository(ObjectMapper mapper) {
-        this.mapper = mapper;
+    default List<Booking> findByStudentEmail(String studentEmail) {
+        if (studentEmail == null) return List.of();
+        return findByStudentEmailIgnoreCase(studentEmail.trim());
     }
 
-    @PostConstruct
-    public void init() throws IOException {
-        file = JsonPersistenceHelper.resolveFile(dataDir, "bookings.json");
-        load();
+    List<Booking> findByTeacherEmailIgnoreCase(String teacherEmail);
+
+    default List<Booking> findByTeacherEmail(String teacherEmail) {
+        if (teacherEmail == null) return List.of();
+        return findByTeacherEmailIgnoreCase(teacherEmail.trim());
     }
 
-    private synchronized void load() throws IOException {
-        List<Booking> list = JsonPersistenceHelper.loadList(file, mapper, new TypeReference<>() {});
-        bookings.clear();
-        list.forEach(b -> bookings.put(b.getId(), b));
-    }
-
-    private synchronized void save() throws IOException {
-        JsonPersistenceHelper.saveListAtomically(file, mapper, new ArrayList<>(bookings.values()));
-    }
-
-    public List<Booking> findAll() {
-        return new ArrayList<>(bookings.values());
-    }
-
-    public Optional<Booking> findById(String id) {
-        return Optional.ofNullable(bookings.get(id));
-    }
-
-    public List<Booking> findByStudentEmail(String email) {
-        return bookings.values().stream()
-                .filter(b -> email.equalsIgnoreCase(b.getStudentEmail()))
-                .toList();
-    }
-
-    public List<Booking> findByTeacherEmail(String email) {
-        return bookings.values().stream()
-                .filter(b -> email.equalsIgnoreCase(b.getTeacherEmail()))
-                .toList();
-    }
-
-    public Booking save(Booking booking) throws IOException {
-        bookings.put(booking.getId(), booking);
-        save();
-        return booking;
-    }
-
-    public void deleteById(String id) throws IOException {
-        bookings.remove(id);
-        save();
-    }
+    List<Booking> findBySkillId(String skillId);
 }

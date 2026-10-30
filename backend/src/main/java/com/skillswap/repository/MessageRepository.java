@@ -1,88 +1,31 @@
 package com.skillswap.repository;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillswap.model.Message;
-import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 
 @Repository
-public class MessageRepository {
+public interface MessageRepository extends JpaRepository<Message, String> {
 
-    private final ObjectMapper mapper;
-    private final Map<String, Message> messages = new ConcurrentHashMap<>();
+    @Query("SELECT m FROM Message m WHERE m.senderId = :userId OR m.receiverId = :userId ORDER BY m.timestamp ASC")
+    List<Message> findByUserId(@Param("userId") String userId);
 
-    @Value("${app.data-dir:data}")
-    private String dataDir;
+    @Query("SELECT m FROM Message m WHERE (LOWER(m.senderId) = LOWER(:u1) AND LOWER(m.receiverId) = LOWER(:u2)) " +
+           "OR (LOWER(m.senderId) = LOWER(:u2) AND LOWER(m.receiverId) = LOWER(:u1)) ORDER BY m.timestamp ASC")
+    List<Message> findConversation(@Param("u1") String u1, @Param("u2") String u2);
 
-    private File file;
-
-    public MessageRepository(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
-
-    @PostConstruct
-    public void init() throws IOException {
-        file = JsonPersistenceHelper.resolveFile(dataDir, "messages.json");
-        load();
-    }
-
-    private synchronized void load() throws IOException {
-        List<Message> list = JsonPersistenceHelper.loadList(file, mapper, new TypeReference<>() {});
-        messages.clear();
-        list.forEach(m -> messages.put(m.getId(), m));
-    }
-
-    private synchronized void save() throws IOException {
-        JsonPersistenceHelper.saveListAtomically(file, mapper, new ArrayList<>(messages.values()));
-    }
-
-    public List<Message> findAll() {
-        return new ArrayList<>(messages.values());
-    }
-
-    /**
-     * Returns all messages where the user is sender or receiver.
-     */
-    public List<Message> findByUserId(String userId) {
-        return messages.values().stream()
-                .filter(m -> userId.equals(m.getSenderId()) || userId.equals(m.getReceiverId()))
-                .toList();
-    }
-
-    /**
-     * Returns messages between two users.
-     */
-    public List<Message> findConversation(String userId1, String userId2) {
-        return messages.values().stream()
-                .filter(m ->
-                        (userId1.equalsIgnoreCase(m.getSenderId()) && userId2.equalsIgnoreCase(m.getReceiverId())) ||
-                        (userId2.equalsIgnoreCase(m.getSenderId()) && userId1.equalsIgnoreCase(m.getReceiverId())))
-                .sorted(Comparator.comparing(m -> m.getTimestamp() != null ? m.getTimestamp() : java.time.Instant.EPOCH))
-                .toList();
-    }
-
-    public List<Message> findByConversation(String userId1, String userId2) {
+    default List<Message> findByConversation(String userId1, String userId2) {
         return findConversation(userId1, userId2);
     }
 
-    public List<Message> findByBookingId(String bookingId) {
-        if (bookingId == null || bookingId.isBlank()) return List.of();
-        return messages.values().stream()
-                .filter(m -> bookingId.equalsIgnoreCase(m.getBookingId()))
-                .sorted(Comparator.comparing(m -> m.getTimestamp() != null ? m.getTimestamp() : java.time.Instant.EPOCH))
-                .toList();
-    }
+    List<Message> findByBookingIdOrderByTimestampAsc(String bookingId);
 
-    public Message save(Message message) throws IOException {
-        messages.put(message.getId(), message);
-        save();
-        return message;
+    default List<Message> findByBookingId(String bookingId) {
+        if (bookingId == null || bookingId.isBlank()) return List.of();
+        return findByBookingIdOrderByTimestampAsc(bookingId);
     }
 }

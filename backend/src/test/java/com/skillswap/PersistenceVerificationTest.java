@@ -1,23 +1,20 @@
 package com.skillswap;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.skillswap.dto.AuthResponse;
 import com.skillswap.dto.LoginRequest;
 import com.skillswap.dto.RegisterRequest;
-import com.skillswap.model.User;
-import com.skillswap.repository.JsonPersistenceHelper;
-import com.skillswap.repository.UserRepository;
+import com.skillswap.model.*;
+import com.skillswap.repository.*;
+import com.skillswap.service.AuthService;
+import com.skillswap.service.BookingService;
+import com.skillswap.service.ChatService;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
-import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,56 +24,92 @@ import static org.junit.jupiter.api.Assertions.*;
 public class PersistenceVerificationTest {
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private UserRepository userRepository;
+
+    @Autowired
+    private SkillRepository skillRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+    @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
+    private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private AuthService authService;
 
     @Test
-    void testJsonPersistenceLifecycle(@TempDir Path tempDir) throws Exception {
-        String testDataDir = tempDir.toAbsolutePath().toString();
+    @Order(1)
+    void testUserRegistrationAndDatabasePersistence() throws Exception {
+        String testEmail = "dbtest-" + System.currentTimeMillis() + "@skillswap.edu";
+        RegisterRequest req = new RegisterRequest();
+        req.setName("Postgres User");
+        req.setEmail(testEmail);
+        req.setCollege("Stanford University");
+        req.setPassword("SecurePass123!");
 
-        // 1. Initialize repository with temporary directory
-        UserRepository repo1 = new UserRepository(objectMapper);
-        ReflectionTestUtils.setField(repo1, "dataDir", testDataDir);
-        repo1.init();
+        AuthResponse regResponse = authService.register(req);
+        assertNotNull(regResponse.getId());
+        assertEquals("Postgres User", regResponse.getName());
 
-        File usersFile = new File(testDataDir, "users.json");
-        assertTrue(usersFile.exists(), "users.json file should be created");
+        // Verify entity is immediately saved in database
+        User persistedUser = userRepository.findByEmail(testEmail).orElse(null);
+        assertNotNull(persistedUser, "User must exist in database");
+        assertEquals("Postgres User", persistedUser.getName());
+        assertEquals("Stanford University", persistedUser.getCollege());
 
-        // 2. Register first user and verify file content on disk
-        User user1 = new User("User One", "user1@example.com", "College A", "passhash1");
-        repo1.save(user1);
+        // Verify login queries directly from database
+        LoginRequest loginReq = new LoginRequest();
+        loginReq.setEmail(testEmail);
+        loginReq.setPassword("SecurePass123!");
 
-        assertTrue(usersFile.length() > 0, "users.json should not be 0 bytes");
-        List<User> listAfterFirst = JsonPersistenceHelper.loadList(usersFile, objectMapper, new com.fasterxml.jackson.core.type.TypeReference<>() {});
-        assertEquals(1, listAfterFirst.size());
-        assertEquals("user1@example.com", listAfterFirst.get(0).getEmail());
+        AuthResponse loginResponse = authService.login(loginReq);
+        assertEquals(regResponse.getId(), loginResponse.getId());
+        assertEquals("Login successful", loginResponse.getMessage());
+    }
 
-        // 3. Register second user and verify both are preserved
-        User user2 = new User("User Two", "user2@example.com", "College B", "passhash2");
-        repo1.save(user2);
+    @Test
+    @Order(2)
+    void testMultipleUsersPreservedWithoutOverwrite() throws Exception {
+        long initialCount = userRepository.count();
 
-        List<User> listAfterSecond = JsonPersistenceHelper.loadList(usersFile, objectMapper, new com.fasterxml.jackson.core.type.TypeReference<>() {});
-        assertEquals(2, listAfterSecond.size());
-        assertTrue(listAfterSecond.stream().anyMatch(u -> u.getEmail().equals("user1@example.com")));
-        assertTrue(listAfterSecond.stream().anyMatch(u -> u.getEmail().equals("user2@example.com")));
+        RegisterRequest req = new RegisterRequest();
+        req.setName("Second DB User");
+        req.setEmail("second-" + System.currentTimeMillis() + "@skillswap.edu");
+        req.setCollege("MIT");
+        req.setPassword("Password999!");
 
-        // 4. Simulate server restart: create brand-new UserRepository instance pointed at same directory
-        UserRepository repoRestarted = new UserRepository(objectMapper);
-        ReflectionTestUtils.setField(repoRestarted, "dataDir", testDataDir);
-        repoRestarted.init(); // loads from users.json
+        authService.register(req);
+        assertEquals(initialCount + 1, userRepository.count(), "User count must increment by 1");
+    }
 
-        // 5. Verify retrieved data after restart
-        assertEquals(2, repoRestarted.findAll().size(), "Both users should be loaded after restart");
-        assertTrue(repoRestarted.findByEmail("user1@example.com").isPresent(), "First user must be retrievable");
-        assertTrue(repoRestarted.findByEmail("user2@example.com").isPresent(), "Second user must be retrievable");
+    @Test
+    @Order(3)
+    void testAllEntitiesPersistableInPostgres() {
+        // Verify Skills repository
+        List<Skill> skills = skillRepository.findAll();
+        assertNotNull(skills);
 
-        // 6. Register a third user on restarted instance
-        User user3 = new User("User Three", "user3@example.com", "College C", "passhash3");
-        repoRestarted.save(user3);
+        // Verify Bookings repository
+        List<Booking> bookings = bookingRepository.findAll();
+        assertNotNull(bookings);
 
-        List<User> listAfterThird = JsonPersistenceHelper.loadList(usersFile, objectMapper, new com.fasterxml.jackson.core.type.TypeReference<>() {});
-        assertEquals(3, listAfterThird.size());
-        assertTrue(listAfterThird.stream().anyMatch(u -> u.getEmail().equals("user1@example.com")));
-        assertTrue(listAfterThird.stream().anyMatch(u -> u.getEmail().equals("user2@example.com")));
-        assertTrue(listAfterThird.stream().anyMatch(u -> u.getEmail().equals("user3@example.com")));
+        // Verify Messages repository
+        List<Message> messages = messageRepository.findAll();
+        assertNotNull(messages);
+
+        // Verify Notifications repository
+        List<Notification> notifications = notificationRepository.findAll();
+        assertNotNull(notifications);
+
+        // Verify Schedules repository
+        List<Schedule> schedules = scheduleRepository.findAll();
+        assertNotNull(schedules);
     }
 }

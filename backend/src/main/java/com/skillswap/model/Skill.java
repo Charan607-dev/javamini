@@ -1,18 +1,41 @@
 package com.skillswap.model;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+@Entity
+@Table(name = "skills", indexes = {
+    @Index(name = "idx_skills_owner_email", columnList = "owner_email")
+})
 public class Skill {
 
+    @Id
+    @Column(name = "id", length = 64, nullable = false, updatable = false)
     private String id;
+
+    @Column(name = "owner_email", nullable = false)
     private String ownerEmail;
+
+    @Column(name = "owner_name")
     private String ownerName;
+
+    @Column(name = "title", nullable = false)
     private String title;
+
+    @Column(name = "category")
     private String category;
+
+    @Column(name = "description", length = 2000)
     private String description;
+
+    @Column(name = "level")
     private String level;
+
+    @Column(name = "wants")
     private String wants;          // what the owner wants to learn in return
+
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     public Skill() {
@@ -29,6 +52,16 @@ public class Skill {
         this.level = level;
         this.wants = wants;
         this.createdAt = Instant.now();
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null || this.id.isBlank()) {
+            this.id = UUID.randomUUID().toString();
+        }
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
     }
 
     // ── Getters & Setters ──

@@ -1,19 +1,48 @@
 package com.skillswap.model;
 
+import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.UUID;
 
+@Entity
+@Table(name = "schedules", indexes = {
+    @Index(name = "idx_schedules_user_id", columnList = "user_id")
+})
 public class Schedule {
 
+    @Id
+    @Column(name = "id", length = 64, nullable = false, updatable = false)
     private String id;
+
+    @Column(name = "user_id", length = 64, nullable = false)
     private String userId;
+
+    @Column(name = "title")
     private String title;
+
+    @Column(name = "schedule_date")
     private String date;
+
+    @Column(name = "schedule_time")
     private String time;
+
+    @Column(name = "description", length = 2000)
     private String description;
+
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     public Schedule() {
+    }
+
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null || this.id.isBlank()) {
+            this.id = UUID.randomUUID().toString();
+        }
+        if (this.createdAt == null) {
+            this.createdAt = Instant.now();
+        }
     }
 
     // ── Getters & Setters ──
