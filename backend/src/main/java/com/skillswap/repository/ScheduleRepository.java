@@ -29,24 +29,18 @@ public class ScheduleRepository {
 
     @PostConstruct
     public void init() throws IOException {
-        file = new File(dataDir, "schedules.json");
-        file.getParentFile().mkdirs();
-        if (!file.exists()) {
-            file.createNewFile();
-            mapper.writeValue(file, List.of());
-        }
+        file = JsonPersistenceHelper.resolveFile(dataDir, "schedules.json");
         load();
     }
 
     private synchronized void load() throws IOException {
-        if (file.length() == 0) return;
-        List<Schedule> list = mapper.readValue(file, new TypeReference<>() {});
+        List<Schedule> list = JsonPersistenceHelper.loadList(file, mapper, new TypeReference<>() {});
         schedules.clear();
         list.forEach(s -> schedules.put(s.getId(), s));
     }
 
     private synchronized void save() throws IOException {
-        mapper.writeValue(file, new ArrayList<>(schedules.values()));
+        JsonPersistenceHelper.saveListAtomically(file, mapper, new ArrayList<>(schedules.values()));
     }
 
     public List<Schedule> findAll() {

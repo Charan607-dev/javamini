@@ -29,24 +29,18 @@ public class SkillRepository {
 
     @PostConstruct
     public void init() throws IOException {
-        file = new File(dataDir, "skills.json");
-        file.getParentFile().mkdirs();
-        if (!file.exists()) {
-            file.createNewFile();
-            mapper.writeValue(file, List.of());
-        }
+        file = JsonPersistenceHelper.resolveFile(dataDir, "skills.json");
         load();
     }
 
     private synchronized void load() throws IOException {
-        if (file.length() == 0) return;
-        List<Skill> list = mapper.readValue(file, new TypeReference<>() {});
+        List<Skill> list = JsonPersistenceHelper.loadList(file, mapper, new TypeReference<>() {});
         skills.clear();
         list.forEach(s -> skills.put(s.getId(), s));
     }
 
     private synchronized void save() throws IOException {
-        mapper.writeValue(file, new ArrayList<>(skills.values()));
+        JsonPersistenceHelper.saveListAtomically(file, mapper, new ArrayList<>(skills.values()));
     }
 
     public List<Skill> findAll() {

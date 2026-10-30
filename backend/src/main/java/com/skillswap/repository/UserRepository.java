@@ -29,24 +29,18 @@ public class UserRepository {
 
     @PostConstruct
     public void init() throws IOException {
-        file = new File(dataDir, "users.json");
-        file.getParentFile().mkdirs();
-        if (!file.exists()) {
-            file.createNewFile();
-            mapper.writeValue(file, List.of());
-        }
+        file = JsonPersistenceHelper.resolveFile(dataDir, "users.json");
         load();
     }
 
     private synchronized void load() throws IOException {
-        if (file.length() == 0) return;
-        List<User> list = mapper.readValue(file, new TypeReference<>() {});
+        List<User> list = JsonPersistenceHelper.loadList(file, mapper, new TypeReference<>() {});
         users.clear();
         list.forEach(u -> users.put(u.getId(), u));
     }
 
     private synchronized void save() throws IOException {
-        mapper.writeValue(file, new ArrayList<>(users.values()));
+        JsonPersistenceHelper.saveListAtomically(file, mapper, new ArrayList<>(users.values()));
     }
 
     public List<User> findAll() {

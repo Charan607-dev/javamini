@@ -29,24 +29,18 @@ public class NotificationRepository {
 
     @PostConstruct
     public void init() throws IOException {
-        file = new File(dataDir, "notifications.json");
-        file.getParentFile().mkdirs();
-        if (!file.exists()) {
-            file.createNewFile();
-            mapper.writeValue(file, List.of());
-        }
+        file = JsonPersistenceHelper.resolveFile(dataDir, "notifications.json");
         load();
     }
 
     private synchronized void load() throws IOException {
-        if (file.length() == 0) return;
-        List<Notification> list = mapper.readValue(file, new TypeReference<>() {});
+        List<Notification> list = JsonPersistenceHelper.loadList(file, mapper, new TypeReference<>() {});
         notifications.clear();
         list.forEach(n -> notifications.put(n.getId(), n));
     }
 
     private synchronized void save() throws IOException {
-        mapper.writeValue(file, new ArrayList<>(notifications.values()));
+        JsonPersistenceHelper.saveListAtomically(file, mapper, new ArrayList<>(notifications.values()));
     }
 
     public List<Notification> findByUserId(String userId) {
