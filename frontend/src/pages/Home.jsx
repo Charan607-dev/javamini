@@ -110,13 +110,6 @@ export default function Home() {
                         <div><span>03</span><Laptop size={23} /><h3>Learn by swapping</h3><p>Exchange knowledge and practise together.</p></div>
                     </div>
                 </section>
-
-                <section className="cta-section">
-                    <span className="section-kicker">YOUR NEXT SKILL STARTS HERE</span>
-                    <h2>What will you <span className="gradient-text">learn next?</span></h2>
-                    <p>Join a community where everyone has something to teach.</p>
-                    <Link to="/register" className="btn btn-primary btn-large">Create your account <ArrowRight size={18} /></Link>
-                </section>
             </main>
             <footer>
                 <Link to="/" className="brand">Skill<span className="accent">Swap</span></Link>
