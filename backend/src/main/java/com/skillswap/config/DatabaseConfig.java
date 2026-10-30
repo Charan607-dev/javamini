@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
 import javax.sql.DataSource;
 
@@ -20,6 +21,7 @@ import javax.sql.DataSource;
  * Deliberately simple – no regex URL parsing, no multi-fallback chains.
  */
 @Configuration
+@Profile("!test")  // Skip during tests – H2 auto-config handles test datasource
 public class DatabaseConfig {
 
     private static final Logger log = LoggerFactory.getLogger(DatabaseConfig.class);
@@ -52,7 +54,7 @@ public class DatabaseConfig {
         cfg.setMinimumIdle(1);
 
         // Timeouts tuned for Supavisor / cloud NAT
-        cfg.setConnectionTimeout(30_000);   // 30 s
+        cfg.setConnectionTimeout(10_000);   // 10 s – fail fast on bad credentials
         cfg.setIdleTimeout(300_000);        // 5 min
         cfg.setMaxLifetime(600_000);        // 10 min – below Supabase 20-min idle limit
         cfg.setKeepaliveTime(60_000);       // 1-min TCP keepalive ping
@@ -118,5 +120,6 @@ public class DatabaseConfig {
                      "Update SPRING_DATASOURCE_USERNAME in Render.", username);
         }
         log.info("===========================");
+        log.info("[Startup] DataSource bean created. Tomcat will bind port next.");
     }
 }
